@@ -4,6 +4,7 @@ import { quotes } from '../data/quotes';
 import { getDayOfWeek, getTodayString, hebrewDays } from '../utils/dateUtils';
 import { getHistory } from '../utils/storage';
 import LogRunModal from '../components/LogRunModal';
+import ExerciseIcon, { getExerciseCategory } from '../components/ExerciseIcon';
 
 function formatExerciseInfo(ex) {
   if (ex.isStretch) {
@@ -172,13 +173,16 @@ export default function Dashboard({ onStartWorkout }) {
 
       {/* Today's Workout Card */}
       <div className="relative overflow-hidden bg-surface rounded-4xl p-5 mb-5 border border-border-light shadow-card-lg animate-fade-in stagger-3 opacity-0">
+        <div className={`absolute inset-0 rounded-4xl pointer-events-none ${
+          todayPlan.category === 'upper' ? 'bg-dots-secondary' : todayPlan.category === 'stretch' ? 'bg-dots-tertiary' : 'bg-dots-primary'
+        } opacity-40`} />
         <div className="gradient-subtle absolute inset-0 rounded-4xl pointer-events-none" />
         <div className="relative">
           <div className="flex justify-between items-start mb-1">
             <div>
               <p className="text-[14px] text-primary-400 font-bold uppercase tracking-widest font-heading">אימון היום</p>
               <h2 className="text-xl font-extrabold mt-1 font-heading text-txt-primary">
-                {dayTypeIcons[todayPlan.type]} {todayPlan.title}
+                {todayPlan.title}
               </h2>
               {todayPlan.description && (
                 <p className="text-[15px] text-txt-secondary mt-1 leading-relaxed">{todayPlan.description}</p>
@@ -209,23 +213,19 @@ export default function Dashboard({ onStartWorkout }) {
           )}
 
           {todayPlan.exercises.length > 0 && (
-            <div className="space-y-1">
-              {todayPlan.exercises.map((ex, i) => (
-                <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-2xl hover:bg-surfaceHover transition-colors">
-                  <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-[14px] font-bold shrink-0 ${
-                    ex.isStretch ? 'bg-tertiary-50 text-tertiary-400' : 'bg-primary-50 text-primary-400'
-                  }`}>
-                    {ex.isStretch ? '~' : i + 1}
+            <div className="grid grid-cols-2 gap-2.5">
+              {todayPlan.exercises.map((ex, i) => {
+                const cat = getExerciseCategory(ex, todayPlan.category);
+                return (
+                  <div key={i} className="bg-surface/80 backdrop-blur-sm rounded-2xl p-3 border border-border-light/50 flex flex-col items-center text-center gap-2">
+                    <ExerciseIcon exerciseName={ex.name} size={48} category={cat} />
+                    <span className="text-[14px] text-txt-primary font-semibold leading-tight line-clamp-2">{ex.name}</span>
+                    <span className="text-primary-400/70 text-[13px] tabular-nums font-bold font-heading" dir="ltr">
+                      {formatExerciseInfo(ex)}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[16px] text-txt-primary font-medium">{ex.name}</span>
-                    {ex.muscles && <span className="text-[14px] text-txt-tertiary mr-2"> · {ex.muscles}</span>}
-                  </div>
-                  <span className="text-primary-400/70 text-[15px] tabular-nums font-bold shrink-0 font-heading" dir="ltr">
-                    {formatExerciseInfo(ex)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -256,20 +256,28 @@ export default function Dashboard({ onStartWorkout }) {
         <div className="mt-7 animate-fade-in stagger-5 opacity-0">
           <h3 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest mb-3 font-heading">בקרוב</h3>
           <div className="space-y-2.5">
-            {upcomingDays.map((day, i) => (
-              <div key={i} className="bg-surface rounded-3xl p-4 border border-border-light shadow-card flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl gradient-calm flex items-center justify-center text-white font-extrabold text-[17px] shrink-0 shadow-teal font-heading">
-                  {day.dayName.slice(0, 1)}׳
+            {upcomingDays.map((day, i) => {
+              const firstEx = day.exercises.find(e => !e.isStretch) || day.exercises[0];
+              const cat = firstEx ? getExerciseCategory(firstEx, day.category) : day.category;
+              return (
+                <div key={i} className="bg-surface rounded-3xl p-4 border border-border-light shadow-card flex items-center gap-4">
+                  {firstEx ? (
+                    <ExerciseIcon exerciseName={firstEx.name} size={44} category={cat} />
+                  ) : (
+                    <div className="w-11 h-11 rounded-2xl gradient-calm flex items-center justify-center text-white font-extrabold text-[17px] shrink-0 shadow-teal font-heading">
+                      {day.dayName.slice(0, 1)}׳
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-[16px] font-bold font-heading text-txt-primary">{day.title}</h4>
+                    <p className="text-[15px] text-txt-tertiary mt-0.5 truncate">
+                      {day.exercises.filter(e => !e.isStretch).map(e => e.name).join(' · ')}
+                    </p>
+                  </div>
+                  <span className="text-[14px] text-txt-tertiary bg-base px-2.5 py-1 rounded-full shrink-0 font-semibold">{day.duration} דק׳</span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-[16px] font-bold font-heading text-txt-primary">{day.title}</h4>
-                  <p className="text-[15px] text-txt-tertiary mt-0.5 truncate">
-                    {day.exercises.filter(e => !e.isStretch).map(e => e.name).join(' · ')}
-                  </p>
-                </div>
-                <span className="text-[14px] text-txt-tertiary bg-base px-2.5 py-1 rounded-full shrink-0 font-semibold">{day.duration} דק׳</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

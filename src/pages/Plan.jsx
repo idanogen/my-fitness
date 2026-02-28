@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { workoutPlan } from '../data/workoutPlan';
 import { exportData, resetAllData, getHistory } from '../utils/storage';
 import { getDayOfWeek } from '../utils/dateUtils';
+import ExerciseIcon, { getExerciseCategory } from '../components/ExerciseIcon';
 
 function formatExerciseInfo(ex) {
   if (ex.isStretch) {
@@ -15,9 +16,10 @@ function formatExerciseInfo(ex) {
   return ex.perSide ? `${base} /צד` : base;
 }
 
-function ExerciseCard({ ex, index }) {
+function ExerciseCard({ ex, index, planCategory }) {
   const [showGuide, setShowGuide] = useState(false);
   const hasGuide = ex.howTo || (ex.tips && ex.tips.length > 0);
+  const cat = getExerciseCategory(ex, planCategory);
 
   return (
     <div className="group">
@@ -26,13 +28,7 @@ function ExerciseCard({ ex, index }) {
         className={`w-full text-right flex items-start gap-3 py-1.5 rounded-2xl transition-colors ${hasGuide ? 'active:bg-surfaceHover' : ''}`}
         disabled={!hasGuide}
       >
-        <div className={`w-7 h-7 rounded-xl flex items-center justify-center text-[15px] font-bold shrink-0 mt-0.5 ${
-          ex.isStretch
-            ? 'bg-tertiary-50 text-tertiary-400'
-            : 'bg-primary-50 text-primary-400'
-        }`}>
-          {ex.isStretch ? '~' : index + 1}
-        </div>
+        <ExerciseIcon exerciseName={ex.name} size={36} category={cat} />
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-baseline gap-2">
             <span className="text-[16px] text-txt-primary font-medium">{ex.name}</span>
@@ -98,8 +94,6 @@ export default function Plan() {
     window.location.reload();
   };
 
-  const dayTypeIcons = { rest: '🧘', workout: '💪', stretch: '🤸' };
-
   return (
     <div className="px-5 pt-12 pb-28 min-h-screen">
       {/* Header */}
@@ -113,6 +107,8 @@ export default function Plan() {
         {workoutPlan.map((day, i) => {
           const isExpanded = expandedDay === i;
           const isToday = today === i;
+          const firstEx = day.exercises.find(e => !e.isStretch) || day.exercises[0];
+          const dayCat = day.category || 'rest';
 
           return (
             <div
@@ -129,11 +125,11 @@ export default function Plan() {
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-lg shrink-0 ${
-                      isToday ? 'gradient-energy shadow-primary text-white' : 'bg-base border border-border-light'
-                    }`}>
-                      <span>{dayTypeIcons[day.type]}</span>
-                    </div>
+                    {firstEx ? (
+                      <ExerciseIcon exerciseName={firstEx.name} size={40} category={firstEx ? getExerciseCategory(firstEx, dayCat) : dayCat} />
+                    ) : (
+                      <ExerciseIcon exerciseName="rest" size={40} category="rest" />
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="text-[14px] text-txt-tertiary font-bold uppercase tracking-wider font-heading">יום {day.dayName}</p>
@@ -166,7 +162,7 @@ export default function Plan() {
                   isExpanded ? 'max-h-[3000px] opacity-100' : 'max-h-0 opacity-0'
                 }`}
               >
-                <div className="px-4 pb-4">
+                <div className={`relative px-4 pb-4 ${dayCat === 'upper' ? 'bg-dots-secondary' : dayCat === 'stretch' ? 'bg-dots-tertiary' : dayCat !== 'rest' ? 'bg-dots-primary' : ''} bg-clip-padding`} style={dayCat !== 'rest' ? { backgroundSize: '20px 20px' } : {}}>
                   {day.description && (
                     <p className="text-[15px] text-txt-secondary mb-3 pb-3 border-b border-border-light leading-relaxed">
                       {day.description}
@@ -176,7 +172,7 @@ export default function Plan() {
                   {day.exercises.length > 0 ? (
                     <div className="space-y-3">
                       {day.exercises.map((ex, j) => (
-                        <ExerciseCard key={j} ex={ex} index={j} />
+                        <ExerciseCard key={j} ex={ex} index={j} planCategory={dayCat} />
                       ))}
                     </div>
                   ) : (

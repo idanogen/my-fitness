@@ -6,6 +6,7 @@ import {
 } from '../utils/storage';
 import TimerRing from '../components/TimerRing';
 import CelebrationScreen from '../components/CelebrationScreen';
+import ExerciseIcon, { getExerciseCategory } from '../components/ExerciseIcon';
 
 const haptic = () => { if ('vibrate' in navigator) navigator.vibrate(40); };
 
@@ -167,6 +168,8 @@ export default function ActiveWorkout({ onFinish }) {
           timeLeft={timerState.timeLeft} totalTime={timerState.totalTime}
           onSkip={() => setTimerState((p) => ({ ...p, timeLeft: 0, isRunning: false }))}
           onAdjust={adjustTimer} nextExercise={nextExerciseName}
+          currentExerciseName={exercises[activeExIdx]?.name}
+          exerciseCategory={exercises[activeExIdx] ? getExerciseCategory(exercises[activeExIdx], todayPlan.category) : 'legs'}
         />
       )}
 
@@ -203,11 +206,13 @@ export default function ActiveWorkout({ onFinish }) {
           const exTotal = ex.sets.length;
           const allDone = exCompleted === exTotal;
           const isActive = exIdx === activeExIdx && !allDone;
+          const exCategory = getExerciseCategory(ex, todayPlan.category);
+          const dotClass = exCategory === 'upper' ? 'bg-dots-secondary' : exCategory === 'stretch' ? 'bg-dots-tertiary' : exCategory === 'core' ? 'bg-dots-primary' : 'bg-dots-primary';
 
           return (
             <div
               key={exIdx}
-              className={`rounded-3xl p-4 border transition-all duration-300 animate-fade-in shadow-card ${
+              className={`relative overflow-hidden rounded-3xl p-4 border transition-all duration-300 animate-fade-in shadow-card ${
                 allDone
                   ? 'bg-secondary-50 border-secondary-200/50'
                   : isActive
@@ -216,8 +221,12 @@ export default function ActiveWorkout({ onFinish }) {
               }`}
               style={{ animationDelay: `${exIdx * 0.06}s`, opacity: 0 }}
             >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
+              {isActive && <div className={`absolute inset-0 ${dotClass} opacity-30 pointer-events-none`} />}
+              <div className="relative flex gap-3 items-start mb-3">
+                <div className={`transition-opacity duration-300 ${allDone ? 'opacity-40' : ''}`}>
+                  <ExerciseIcon exerciseName={ex.name} size={isActive ? 72 : 48} category={exCategory} />
+                </div>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className={`font-bold text-[17px] font-heading ${allDone ? 'text-secondary-500' : 'text-txt-primary'}`}>
                       {ex.name}
@@ -228,7 +237,7 @@ export default function ActiveWorkout({ onFinish }) {
                     {ex.isStretch ? 'מתיחה' : ex.isMax ? `${exTotal} סטים × מקסימום` : ex.isTime ? `${exTotal} × ${ex.targetReps} שניות` : `${exTotal} × ${ex.targetReps} חזרות`}
                     {ex.perSide ? ' (כל צד)' : ''}
                   </p>
-                  {ex.muscles && <p className="text-[14px] text-txt-tertiary mt-0.5">🎯 {ex.muscles}</p>}
+                  {ex.muscles && <p className="text-[14px] text-txt-tertiary mt-0.5">{ex.muscles}</p>}
                   {(ex.howTo || ex.tips?.length > 0) && (
                     <button
                       onClick={() => setOpenGuide(openGuide === exIdx ? -1 : exIdx)}
@@ -236,7 +245,7 @@ export default function ActiveWorkout({ onFinish }) {
                     >{openGuide === exIdx ? '▲ הסתר' : '📖 איך מבצעים?'}</button>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col items-end gap-1 shrink-0">
                   <span className="text-[15px] text-txt-secondary font-bold tabular-nums font-heading">{exCompleted}/{exTotal}</span>
                   <div className="w-12 h-1.5 bg-base rounded-full overflow-hidden">
                     <div className="h-full gradient-energy rounded-full transition-all duration-300" style={{ width: `${exTotal > 0 ? (exCompleted / exTotal) * 100 : 0}%` }} />

@@ -1,7 +1,8 @@
 import React from 'react';
+import ExerciseIcon from './ExerciseIcon';
 
-export default function TimerRing({ timeLeft, totalTime, onSkip, onAdjust, nextExercise }) {
-  const size = 200;
+export default function TimerRing({ timeLeft, totalTime, onSkip, onAdjust, nextExercise, currentExerciseName, exerciseCategory }) {
+  const size = 240;
   const strokeWidth = 8;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -13,7 +14,7 @@ export default function TimerRing({ timeLeft, totalTime, onSkip, onAdjust, nextE
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col items-center justify-center animate-fade-in" style={{ background: 'rgba(245, 247, 250, 0.96)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-      <p className="text-txt-secondary text-[17px] mb-8 font-semibold tracking-wide font-heading">⏸ מנוחה בין סטים</p>
+      <p className="text-txt-secondary text-[17px] mb-8 font-semibold tracking-wide font-heading">מנוחה בין סטים</p>
 
       <div className="relative">
         <div className="absolute inset-0 rounded-full" style={{ boxShadow: '0 0 40px rgba(255, 107, 74, 0.1), 0 0 80px rgba(255, 107, 74, 0.05)' }} />
@@ -40,7 +41,12 @@ export default function TimerRing({ timeLeft, totalTime, onSkip, onAdjust, nextE
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-5xl font-extrabold tabular-nums text-txt-primary tracking-tight font-heading" dir="ltr">
+          {currentExerciseName && (
+            <div className="absolute opacity-15">
+              <ExerciseIcon exerciseName={currentExerciseName} size={80} category={exerciseCategory || 'legs'} />
+            </div>
+          )}
+          <span className="relative text-5xl font-extrabold tabular-nums text-txt-primary tracking-tight font-heading" dir="ltr">
             {minutes}:{seconds.toString().padStart(2, '0')}
           </span>
         </div>

@@ -4,6 +4,7 @@ import { getHistory } from '../utils/storage';
 import { workoutPlan } from '../data/workoutPlan';
 import { formatDate } from '../utils/dateUtils';
 import HeatMap from '../components/HeatMap';
+import ExerciseIcon, { getExerciseCategory } from '../components/ExerciseIcon';
 
 export default function Progress() {
   const history = getHistory();
@@ -169,7 +170,8 @@ export default function Progress() {
       </div>
 
       {/* Weekly Bar Chart */}
-      <div className="bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in stagger-3 opacity-0">
+      <div className="relative overflow-hidden bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in stagger-3 opacity-0">
+        <div className="absolute inset-0 bg-dots-primary opacity-30 pointer-events-none" />
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading">אימונים לפי שבוע</h3>
           <span className="text-[14px] text-txt-tertiary font-semibold">8 שבועות</span>
@@ -199,7 +201,8 @@ export default function Progress() {
       </div>
 
       {/* Heatmap */}
-      <div className="bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in stagger-4 opacity-0">
+      <div className="relative overflow-hidden bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in stagger-4 opacity-0">
+        <div className="absolute inset-0 bg-dots-secondary opacity-30 pointer-events-none" />
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading">מפת פעילות</h3>
           <span className="text-[14px] text-txt-tertiary font-semibold">3 חודשים</span>
@@ -338,9 +341,7 @@ export default function Progress() {
             {records.map((record, i) => (
               <div key={i} className="flex justify-between items-center py-2.5 px-3 rounded-2xl bg-base border border-border-light/50">
                 <div className="flex items-center gap-2.5">
-                  <span className={`text-[14px] font-extrabold tabular-nums w-6 h-6 rounded-lg flex items-center justify-center font-heading ${
-                    i === 0 ? 'bg-amber-100 text-amber-600' : i === 1 ? 'bg-gray-100 text-gray-500' : i === 2 ? 'bg-orange-100 text-orange-500' : 'bg-base text-txt-tertiary'
-                  }`}>{i + 1}</span>
+                  <ExerciseIcon exerciseName={record.name} size={28} category={getExerciseCategory({ name: record.name, muscles: '' }, 'legs')} />
                   <span className="text-[16px] text-txt-primary font-medium">{record.name}</span>
                 </div>
                 <div className="flex items-center gap-3">

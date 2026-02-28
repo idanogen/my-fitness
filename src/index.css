@@ -152,6 +152,28 @@ input[type='number'] {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
 
+/* ── Dot Patterns ────────────────────────────── */
+
+.bg-dots {
+  background-image: radial-gradient(circle, #D1D5DE 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.bg-dots-primary {
+  background-image: radial-gradient(circle, rgba(255, 107, 74, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.bg-dots-secondary {
+  background-image: radial-gradient(circle, rgba(11, 184, 144, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.bg-dots-tertiary {
+  background-image: radial-gradient(circle, rgba(124, 92, 252, 0.18) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
 /* ── Scrollbar ────────────────────────────────── */
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
