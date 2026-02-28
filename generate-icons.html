@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p>Right-click each image → "Save Image As" to save the icons</p>
+<h3>icon-192.png:</h3>
+<canvas id="c192" width="192" height="192"></canvas>
+<h3>icon-512.png:</h3>
+<canvas id="c512" width="512" height="512"></canvas>
+<script>
+function draw(id, size) {
+  const c = document.getElementById(id);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0f0f0f';
+  ctx.fillRect(0, 0, size, size);
+  ctx.font = `${size * 0.55}px serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('💪', size / 2, size / 2);
+}
+draw('c192', 192);
+draw('c512', 512);
+</script>
+</body>
+</html>
