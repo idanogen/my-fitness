@@ -282,13 +282,14 @@ export default function Dashboard({ onStartWorkout }) {
       </div>
 
       {/* FAB — Log Run */}
-      <button
+      {!showRunModal && <button
         onClick={() => setShowRunModal(true)}
-        className="fixed left-5 bottom-24 w-14 h-14 gradient-calm rounded-full shadow-teal flex items-center justify-center text-white text-2xl font-bold active:scale-90 transition-transform z-40"
+        className="fixed right-5 bottom-28 w-14 h-14 gradient-calm rounded-full flex items-center justify-center text-white text-3xl font-bold active:scale-90 transition-transform z-[60]"
+        style={{ boxShadow: '0 4px 20px rgba(11, 184, 144, 0.4)' }}
         aria-label="רישום ריצה"
       >
         +
-      </button>
+      </button>}
 
       {/* Log Run Modal */}
       <LogRunModal

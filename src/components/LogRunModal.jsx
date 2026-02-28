@@ -103,7 +103,7 @@ export default function LogRunModal({ open, onClose, onSaved }) {
           </h2>
         </div>
 
-        <div className="px-5 pb-6">
+        <div className="px-5 pb-32">
           {/* Run Type Chips */}
           <div className="mb-5">
             <label className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading mb-2 block">סוג ריצה</label>

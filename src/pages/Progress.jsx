@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LineChart, Line, Tooltip } from 'recharts';
 import { getHistory } from '../utils/storage';
 import { workoutPlan } from '../data/workoutPlan';
 import { formatDate } from '../utils/dateUtils';
@@ -80,6 +80,61 @@ export default function Progress() {
     return Math.round(total / history.length);
   }, [history]);
 
+  const runs = useMemo(() => history.filter((h) => h.type === 'run' && h.run), [history]);
+
+  const runStats = useMemo(() => {
+    if (runs.length === 0) return null;
+    const totalKm = runs.reduce((sum, h) => sum + (h.run.distanceKm || 0), 0);
+    const avgPace = runs.reduce((sum, h) => sum + (h.run.paceMinPerKm || 0), 0) / runs.length;
+    const maxKm = Math.max(...runs.map((h) => h.run.distanceKm || 0));
+    const paceMin = Math.floor(avgPace);
+    const paceSec = Math.round((avgPace - paceMin) * 60);
+    return {
+      totalKm: totalKm.toFixed(1),
+      avgPace: `${paceMin}:${String(paceSec).padStart(2, '0')}`,
+      count: runs.length,
+      longestKm: maxKm.toFixed(1),
+    };
+  }, [runs]);
+
+  const weeklyKmData = useMemo(() => {
+    if (runs.length === 0) return [];
+    const weeks = [];
+    const today = new Date();
+    for (let w = 7; w >= 0; w--) {
+      const weekStart = new Date(today);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() - w * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      let km = 0;
+      runs.forEach((h) => {
+        const d = new Date(h.date);
+        if (d >= weekStart && d <= weekEnd) {
+          km += h.run.distanceKm || 0;
+        }
+      });
+      weeks.push({
+        name: `${weekStart.getDate()}/${weekStart.getMonth() + 1}`,
+        km: Math.round(km * 10) / 10,
+      });
+    }
+    return weeks;
+  }, [runs]);
+
+  const paceTrendData = useMemo(() => {
+    if (runs.length === 0) return [];
+    return [...runs]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-20)
+      .map((h) => {
+        const [y, m, d] = h.date.split('-');
+        return {
+          name: `${d}/${m}`,
+          pace: Math.round(h.run.paceMinPerKm * 100) / 100,
+        };
+      });
+  }, [runs]);
+
   return (
     <div className="px-5 pt-12 pb-28 min-h-screen">
       {/* Header */}
@@ -151,6 +206,126 @@ export default function Progress() {
         </div>
         <HeatMap history={history} />
       </div>
+
+      {/* Run Analytics */}
+      {runs.length > 0 && (
+        <>
+          {/* Run Section Header */}
+          <div className="flex items-center gap-2 mb-3 mt-2 animate-fade-in">
+            <span className="text-lg">🏃</span>
+            <h2 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading">ריצה</h2>
+          </div>
+
+          {/* Run Summary Cards */}
+          <div className="grid grid-cols-2 gap-2.5 mb-4 animate-fade-in">
+            <div className="bg-surface rounded-3xl p-4 border border-border-light shadow-card">
+              <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center mb-2">
+                <span className="text-[17px]">🛣️</span>
+              </div>
+              <p className="text-[28px] font-extrabold text-teal-500 tabular-nums font-heading">{runStats.totalKm}</p>
+              <p className="text-[14px] text-txt-tertiary mt-0.5 font-semibold">סה״כ ק״מ</p>
+            </div>
+            <div className="bg-surface rounded-3xl p-4 border border-border-light shadow-card">
+              <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center mb-2">
+                <span className="text-[17px]">⏱</span>
+              </div>
+              <p className="text-[28px] font-extrabold text-teal-500 tabular-nums font-heading">{runStats.avgPace}</p>
+              <p className="text-[14px] text-txt-tertiary mt-0.5 font-semibold">קצב ממוצע</p>
+            </div>
+            <div className="bg-surface rounded-3xl p-4 border border-border-light shadow-card">
+              <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center mb-2">
+                <span className="text-[17px]">🏃</span>
+              </div>
+              <p className="text-[28px] font-extrabold text-teal-500 tabular-nums font-heading">{runStats.count}</p>
+              <p className="text-[14px] text-txt-tertiary mt-0.5 font-semibold">מספר ריצות</p>
+            </div>
+            <div className="bg-surface rounded-3xl p-4 border border-border-light shadow-card">
+              <div className="w-8 h-8 rounded-xl bg-teal-100 flex items-center justify-center mb-2">
+                <span className="text-[17px]">🏅</span>
+              </div>
+              <p className="text-[28px] font-extrabold text-teal-500 tabular-nums font-heading">{runStats.longestKm}<span className="text-[14px] text-txt-tertiary"> ק״מ</span></p>
+              <p className="text-[14px] text-txt-tertiary mt-0.5 font-semibold">ריצה ארוכה</p>
+            </div>
+          </div>
+
+          {/* Weekly Km Bar Chart */}
+          <div className="bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading">ק״מ לפי שבוע</h3>
+              <span className="text-[14px] text-txt-tertiary font-semibold">8 שבועות</span>
+            </div>
+            <div className="h-44" dir="ltr">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={weeklyKmData} barCategoryGap="20%">
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#8E95A9', fontSize: 10, fontWeight: 600 }}
+                  />
+                  <YAxis hide />
+                  <Tooltip
+                    formatter={(value) => [`${value} ק״מ`, '']}
+                    contentStyle={{ borderRadius: 12, border: 'none', fontSize: 13 }}
+                  />
+                  <Bar dataKey="km" radius={[8, 8, 0, 0]}>
+                    {weeklyKmData.map((_, index) => (
+                      <Cell
+                        key={index}
+                        fill="#0BB890"
+                        fillOpacity={index === weeklyKmData.length - 1 ? 1 : 0.7}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Pace Trend Line Chart */}
+          {paceTrendData.length >= 2 && (
+            <div className="bg-surface rounded-3xl p-5 mb-4 border border-border-light shadow-card animate-fade-in">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[14px] text-txt-tertiary font-bold uppercase tracking-widest font-heading">מגמת קצב</h3>
+                <span className="text-[14px] text-txt-tertiary font-semibold">{paceTrendData.length} ריצות</span>
+              </div>
+              <div className="h-44" dir="ltr">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={paceTrendData}>
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#8E95A9', fontSize: 10, fontWeight: 600 }}
+                    />
+                    <YAxis
+                      hide
+                      reversed
+                      domain={['dataMin - 0.5', 'dataMax + 0.5']}
+                    />
+                    <Tooltip
+                      formatter={(value) => {
+                        const m = Math.floor(value);
+                        const s = Math.round((value - m) * 60);
+                        return [`${m}:${String(s).padStart(2, '0')} /ק״מ`, 'קצב'];
+                      }}
+                      contentStyle={{ borderRadius: 12, border: 'none', fontSize: 13 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="pace"
+                      stroke="#0BB890"
+                      strokeWidth={2.5}
+                      dot={{ fill: '#0BB890', r: 4 }}
+                      activeDot={{ r: 6, fill: '#0BB890' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Personal Records */}
       {records.length > 0 && (
